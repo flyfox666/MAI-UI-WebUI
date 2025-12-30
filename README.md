@@ -9,6 +9,16 @@
 
 ![Overview PDF](./assets/img/overview.png)
 
+## ✨ Highlights
+
+This repository provides the official implementation of **MAI-UI**, a foundation GUI agent for Android automation. Key features include:
+
+- 🖥️ **Gradio Web UI** - Interactive control panel with real-time trajectory visualization and device management
+- 📱 **ADB Integration** - USB and wireless debugging support with scrcpy screen mirroring
+- 🤖 **Multi-Model Support** - Pre-configured templates for vLLM, Qwen, OpenAI, and custom providers
+- 🔧 **MCP Tools** - External tool integration (e.g., AMap navigation)
+- 📦 **App Mapping** - Chinese app name to package name mapping for direct app launching
+- ⚡ **One-Click Setup** - Automated dependency checking and environment validation
 
 ## 📰 News
 
