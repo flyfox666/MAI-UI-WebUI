@@ -1,5 +1,5 @@
-# MAI-UI Mobile
-> MAI-UI: Real-World Centric Foundation GUI Agents.
+# MAI-UI
+> MAI-UI Technical Report: Real-World Centric Foundation GUI Agents.
 
 <p align="center">
   <a href="https://arxiv.org/abs/2512.22047"><img src="https://img.shields.io/badge/📄%20arXiv-Paper-red" alt="arXiv" /></a>
@@ -80,8 +80,8 @@ Trigger `ask_user` for more information to complete the task.
 <table align="center">
   <tr>
     <td align="center">
-      <img src="./assets/gif/living.gif" height="400" alt="Daily Life Demo"/>
-      <br/><b>Daily Life Demo</b>
+      <img src="./assets/gif/living.gif" height="400" alt="Daily Life Demo."/>
+      <br/><b>User instruction: 去盒马买菜，买一份雪花牛肉卷、一份娃娃菜、一份金针菇，再随便买一个豆制品。对了，去日历中待办里检查下我老婆有什么要在盒马买的，我确认下要不要一起买</b>
     </td>
   </tr>
 </table>
@@ -93,8 +93,8 @@ Use `mcp_call` to invoke AMap tools for navigation.
 <table align="center">
   <tr>
     <td align="center">
-      <img src="./assets/gif/navigation.gif" height="400" alt="Navigation Demo"/>
-      <br/><b>Navigation Demo</b>
+      <img src="./assets/gif/navigation.gif" height="400" alt="Navigation Demo."/>
+      <br/><b>User instruction: 我现在在阿里巴巴云谷园区，我要先去 招商银行取钱，再去城西银泰城。帮我规划公交地铁出行的路线，选一家在4公里以内的、用时最短的招商银行，两段行程总时间不要超过2小时，把规划行程记在笔 记中我一会看，标题为下午行程，内容为两段行程细节</b>
     </td>
   </tr>
 </table>
@@ -106,8 +106,8 @@ Use `mcp_call` to invoke AMap tools for navigation.
 <table align="center">
   <tr>
     <td align="center">
-      <img src="./assets/gif/shopping.gif" height="400" alt="Shopping Demo"/>
-      <br/><b>Shopping Demo</b>
+      <img src="./assets/gif/shopping.gif" height="400" alt="Shopping Demo."/>
+      <br/><b>User instruction: Search “timeless earth 2026” on Xiaohongshu, save the one product image to your photo album, then use the saved image on Taobao to search for the same item and  add it to my shopping cart.</b>
     </td>
   </tr>
 </table>
@@ -119,8 +119,8 @@ Cross-apps collaboration to complete the task.
 <table align="center">
   <tr>
     <td align="center">
-      <img src="./assets/gif/work.gif" height="400" alt="Work Demo"/>
-      <br/><b>Work Demo</b>
+      <img src="./assets/gif/work.gif" height="400" alt="Work Demo."/>
+      <br/><b>User instruction: 我需要紧急出差上海，帮我去12306查询现在最早从杭州西站去上海虹桥、有二等座票的班次，在钉钉前沿技术研讨群里把到达时间同步给大家，再把我和水番的会议日程改到明天同一时间，在群里发消息@他，礼貌解释因为临时出差调整会议时间，询问他明天是否有空</b>
     </td>
   </tr>
 </table>
@@ -132,8 +132,8 @@ Device-cloud collaboration for simple tasks, no need cloud model invocation.
 <table align="center">
   <tr>
     <td align="center">
-      <img src="./assets/gif/dcc_simple_task.gif" height="400" alt="Device-cloud Collaboration Demo"/>
-      <br/><b>Device-cloud Collaboration Demo</b>
+      <img src="./assets/gif/dcc_simple_task.gif" height="400" alt="Device-cloud Collaboration Demo."/>
+      <br/><b>User Instruction: 去飞猪查询12月25日去，28日回，杭州到三亚的往返机票</b>
     </td>
   </tr>
 </table>
@@ -145,8 +145,8 @@ Device-cloud collaboration for complex tasks, requiring cloud model invocation w
 <table align="center">
   <tr>
     <td align="center">
-      <img src="./assets/gif/dcc_complex_task.gif" height="400" alt="Device-cloud Collaboration Demo"/>
-      <br/><b>Device-cloud Collaboration Demo</b>
+      <img src="./assets/gif/dcc_complex_task.gif" height="400" alt="Device-cloud Collaboration Demo."/>
+      <br/><b>User Instruction: 去淘票票给我买一张25号下午的疯狂动物城2的电影票，选亲橙里的电影院，中间的座位，加一份可乐和爆米花的单人餐，停在最后的订单界面</b>
     </td>
   </tr>
 </table>
