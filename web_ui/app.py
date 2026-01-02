@@ -366,6 +366,7 @@ def create_ui():
                         with gr.Row():
                             connect_btn = gr.Button("🔗 连接", variant="primary", size="sm")
                             disconnect_btn = gr.Button("✂️ 断开", size="sm")
+                            enable_tcpip_btn = gr.Button("📡 启用TCP/IP", size="sm")
                         
                         wireless_status = gr.Textbox(label="状态", interactive=False, lines=1)
                 
@@ -445,6 +446,15 @@ def create_ui():
                     with gr.Row():
                         device_dd = gr.Dropdown(label="当前设备", choices=[], value=None, scale=3)
                         refresh_dev_btn = gr.Button("🔄", scale=1)
+                    
+                    max_steps_slider = gr.Slider(
+                        label="最大步数",
+                        minimum=10,
+                        maximum=200,
+                        value=50,
+                        step=10,
+                        info="任务执行的最大步数限制"
+                    )
                 
                 # 4. 实用工具
                 with gr.Accordion("🛠 实用工具", open=False):
@@ -483,6 +493,7 @@ def create_ui():
                         )
                         with gr.Row():
                             clear_log_btn = gr.Button("🗑 清空", size="sm")
+                            copy_log_btn = gr.Button("📋 复制", size="sm")
         
         # ========== 事件绑定 ==========
         
@@ -528,6 +539,24 @@ def create_ui():
         
         disconnect_btn.click(disconnect_wireless_handler, outputs=[device_status, wireless_status])
         
+        # TCP/IP 启用（需要 USB 连接时使用）
+        def enable_tcpip_handler():
+            """启用 TCP/IP 模式 (adb tcpip 5555)"""
+            import subprocess
+            try:
+                result = subprocess.run(
+                    ["adb", "tcpip", "5555"],
+                    capture_output=True, text=True, timeout=10
+                )
+                if result.returncode == 0:
+                    return "✅ TCP/IP 模式已启用 (端口 5555)\n现在可以拔掉 USB 并用 IP 连接"
+                else:
+                    return f"❌ 启用失败: {result.stderr.strip()[:50]}"
+            except Exception as e:
+                return f"❌ 错误: {str(e)[:50]}"
+        
+        enable_tcpip_btn.click(enable_tcpip_handler, outputs=[wireless_status])
+        
         # 刷新设备列表
         def refresh_devices():
             devices, _ = get_adb_devices()
@@ -545,12 +574,17 @@ def create_ui():
         refresh_sessions_btn.click(refresh_sessions, outputs=session_dropdown)
         demo.load(refresh_sessions, outputs=session_dropdown)
         
-        # 加载轨迹
+        # 加载轨迹 (带任务信息头)
         def load_trajectory(session_id):
             if not session_id:
                 return []
             logs = load_session_logs(session_id)
-            messages = logs_to_chatbot_messages(logs)
+            # 从第一条日志尝试获取指令
+            task_instruction = None
+            if logs:
+                first_log = logs[0]
+                task_instruction = first_log.get("instruction", None)
+            messages = logs_to_chatbot_messages(logs, task_instruction=task_instruction)
             return messages
         
         session_dropdown.change(load_trajectory, inputs=[session_dropdown], outputs=[trajectory_output])
@@ -653,9 +687,22 @@ def create_ui():
         
         clear_log_btn.click(clear_logs, outputs=log_output)
         
+        # 复制日志到剪贴板 (使用 JS)
+        copy_log_btn.click(
+            fn=None, inputs=[], outputs=[],
+            js="""() => {
+                let el = document.querySelector('#log-window textarea');
+                if (el && el.value) {
+                    navigator.clipboard.writeText(el.value).then(() => alert('已复制到剪贴板')).catch(() => alert('复制失败'));
+                } else {
+                    alert('没有日志可复制');
+                }
+            }"""
+        )
+        
         # ========== 核心：任务执行 ==========
         
-        def start_task(instruction, base_url, model_name, device, auto_reply):
+        def start_task(instruction, base_url, model_name, device, auto_reply, max_steps):
             """
             执行任务 - 使用生成器实现实时流式更新
             支持从暂停状态恢复,此时新指令将作为用户反馈注入
@@ -692,7 +739,14 @@ def create_ui():
                 yield "🟢 运行中", [], log_text
                 
                 # 流式执行
-                for result in runner.auto_run(max_steps=30, step_delay=1.5):
+                for result in runner.auto_run(max_steps=int(max_steps), step_delay=1.5):
+                    # 检查是否已停止
+                    if runner.should_stop or not runner.is_running:
+                        log_text += "\n\n⏹ 任务已停止"
+                        trajectory = logs_to_chatbot_messages(load_session_logs(session_id))
+                        yield "⏹ 已停止", trajectory, log_text
+                        return
+                    
                     log_text += f"\n步骤 {result.step_index}: {result.action_type} - {result.message}"
                     
                     # 加载最新轨迹
@@ -710,6 +764,13 @@ def create_ui():
                     
                     # 每步都 yield，实现实时更新
                     yield runner.get_status(), trajectory, log_text
+                    
+                    # yield 后再检查一次是否需要停止
+                    if runner.should_stop or not runner.is_running:
+                        log_text += "\n\n⏹ 任务已停止"
+                        trajectory = logs_to_chatbot_messages(load_session_logs(session_id))
+                        yield "⏹ 已停止", trajectory, log_text
+                        return
                 
                 # 最终状态
                 trajectory = logs_to_chatbot_messages(load_session_logs(session_id))
@@ -720,7 +781,7 @@ def create_ui():
         
         submit_btn.click(
             start_task,
-            inputs=[user_input, base_url_input, model_name_input, device_dd, auto_reply_chk],
+            inputs=[user_input, base_url_input, model_name_input, device_dd, auto_reply_chk, max_steps_slider],
             outputs=[task_status, trajectory_output, log_output]
         )
         
@@ -769,6 +830,21 @@ def create_ui():
             return "⚪ 就绪"
         
         stop_btn.click(stop_task, outputs=task_status)
+        
+        # === gr.Timer 实时轮询 (gelab-zero 风格) ===
+        timer = gr.Timer(2.0)  # 2秒刷新一次
+        
+        def poll_updates():
+            """轮询更新 session 列表"""
+            global runner
+            sessions = get_available_sessions()
+            # 如果有正在运行的任务，自动选择当前 session
+            current_session = runner.session_id if runner and runner.is_running else None
+            if current_session and current_session in sessions:
+                return gr.Dropdown(choices=sessions, value=current_session)
+            return gr.Dropdown(choices=sessions, value=sessions[0] if sessions else None)
+        
+        timer.tick(fn=poll_updates, outputs=[session_dropdown])
     
     return demo, custom_css, lightbox_head
 

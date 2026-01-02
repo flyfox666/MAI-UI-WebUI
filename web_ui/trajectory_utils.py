@@ -109,7 +109,11 @@ def load_session_logs(session_id: str, logs_dir: str = LOGS_DIR) -> List[Dict[st
     return logs
 
 
-def logs_to_chatbot_messages(logs: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+def logs_to_chatbot_messages(
+    logs: List[Dict[str, Any]], 
+    task_instruction: str = None,
+    model_name: str = None
+) -> List[Dict[str, Any]]:
     """
     将日志转换为 Gradio 6.x Chatbot 格式的消息列表
 
@@ -126,11 +130,29 @@ def logs_to_chatbot_messages(logs: List[Dict[str, Any]]) -> List[Dict[str, Any]]
 
     Args:
         logs: 日志条目列表
+        task_instruction: 任务指令（可选，从第一条日志推断或传入）
+        model_name: 模型名称（可选）
 
     Returns:
         Chatbot messages 列表
     """
     messages = []
+    
+    # 尝试从日志中获取任务信息
+    if logs and not task_instruction:
+        first_log = logs[0]
+        # 尝试从不同的可能位置获取指令
+        task_instruction = first_log.get("instruction", "") or first_log.get("task", "")
+    
+    # 添加任务头信息（gelab-zero 风格）
+    if task_instruction:
+        header_content = f"### 📋 任务: {task_instruction}"
+        if model_name:
+            header_content += f"\n\n**模型**: {model_name}"
+        messages.append({
+            "role": "assistant",
+            "content": header_content
+        })
 
     for log in logs:
         step_index = log.get("step_index", 0)

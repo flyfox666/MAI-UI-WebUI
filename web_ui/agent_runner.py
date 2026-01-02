@@ -31,6 +31,27 @@ except ImportError:
     print("[WARNING] MAI-UI Agent 未找到，将使用模拟模式")
 
 
+def format_user_intervention(user_input: str) -> str:
+    """
+    格式化用户干预指令，使用高优先级提示
+    来自 gelab-zero 的智能特性
+    
+    Args:
+        user_input: 用户输入的指令
+    
+    Returns:
+        格式化后的高优先级提示
+    """
+    return f"""【紧急用户干预 - 最高优先级】
+用户要求：{user_input}
+
+重要提示：
+1. 立即停止当前正在执行的任务
+2. 优先执行用户的新指令
+3. 不要输出 terminate/COMPLETE，除非新指令已完成
+4. 根据当前屏幕状态，执行用户的新要求"""
+
+
 @dataclass
 class StepResult:
     """单步执行结果"""
@@ -195,11 +216,13 @@ class AgentRunner:
                 
                 obs = {"screenshot": pred_screenshot}
                 
-                # 如果有待消费的用户输入或恢复时的注入指令，传给 Agent
+                # 如果有待消费的用户输入或恢复时的注入指令，使用高优先级格式传给 Agent
                 feedback = self.pending_user_feedback or self.user_input
                 if feedback:
-                    print(f"[AgentRunner] Passing user feedback to agent: {feedback}")
-                    obs["user_feedback"] = feedback
+                    # 使用 gelab-zero 的高优先级用户干预格式
+                    priority_feedback = format_user_intervention(feedback)
+                    print(f"[AgentRunner] 用户干预 (高优先级): {feedback}")
+                    obs["user_feedback"] = priority_feedback
                     self.pending_user_feedback = None  # 消费掉
                     self.user_input = None
                 prediction, action = self.agent.predict(self.current_instruction, obs)
@@ -261,9 +284,8 @@ class AgentRunner:
             
             elif action_type == "AWAKE":
                 # AWAKE 动作 (gelab-zero 兼容): 直接打开应用
-                app_name = action.get("text", "") or action.get("value", "")
-                success, msg = open_app(app_name, self.device_id, prefer_awake=True)
-                return success, f"唤醒应用 (AWAKE): {msg}"
+                # 动作已在 _execute_action 中处理，这里只是做额外处理
+                pass
             
             elif action_type == "INFO":
                 # INFO 动作 (gelab-zero 兼容): 等同于 ask_user
@@ -272,7 +294,6 @@ class AgentRunner:
                     self._handle_auto_reply(screenshot, text)
                 else:
                     self._wait_for_user_input(text)
-                return True, f"信息 (INFO): {text}"
             
             return result
             
@@ -359,6 +380,17 @@ class AgentRunner:
             elif action_type == "mcp_call":
                 # MCP 工具调用
                 return self._handle_mcp_call(action)
+            
+            elif action_type == "AWAKE":
+                # AWAKE 动作 (gelab-zero 兼容): 直接打开应用
+                app_name = action.get("text", "") or action.get("value", "")
+                success, msg = open_app(app_name, self.device_id, prefer_awake=True)
+                return success, f"唤醒应用: {msg}"
+            
+            elif action_type == "INFO":
+                # INFO 动作 (gelab-zero 兼容): 等同于 ask_user
+                text = action.get("text", "") or action.get("value", "")
+                return True, f"询问用户 (INFO): {text}"
             
             else:
                 return False, f"未知动作类型: {action_type}"
@@ -530,6 +562,7 @@ class AgentRunner:
         log_path = os.path.join(session_dir, "trajectory.jsonl")
         log_entry = result.to_dict()
         log_entry["screenshot_path"] = screenshot_path
+        log_entry["instruction"] = self.current_instruction  # 添加任务指令
         
         with open(log_path, "a", encoding="utf-8") as f:
             f.write(json.dumps(log_entry, ensure_ascii=False) + "\n")

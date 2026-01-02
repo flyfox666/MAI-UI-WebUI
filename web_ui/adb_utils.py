@@ -797,6 +797,74 @@ def input_text_yadb(text: str, device_id: Optional[str] = None) -> bool:
     return code == 0
 
 
+def detect_screen_orientation(device_id: Optional[str] = None) -> int:
+    """
+    检测设备屏幕方向
+    
+    Args:
+        device_id: 可选，指定设备 ID
+    
+    Returns:
+        0: 竖屏 (Portrait)
+        1: 横屏 (Landscape - 顺时针90度)
+        2: 倒置竖屏 (Reverse Portrait)
+        3: 横屏 (Landscape - 逆时针90度)
+        -1: 检测失败
+    """
+    import os as _os
+    
+    cmd = ["adb"]
+    if device_id:
+        cmd.extend(["-s", device_id])
+    
+    # Windows 使用 PowerShell 解析
+    if _os.name == 'nt':
+        ps_cmd = ' '.join(cmd) + " shell dumpsys input"
+        result = subprocess.run(
+            ["powershell.exe", "-Command", 
+             f"({ps_cmd}) | Select-String 'orientation=\\d+' | Select -First 1 | % {{ $_.Matches.Value -replace 'orientation=', '' }}"],
+            capture_output=True,
+            text=True,
+            encoding='utf-8',
+            timeout=10
+        )
+    else:
+        # Unix/Linux/Mac
+        shell_cmd = ' '.join(cmd) + ' shell dumpsys input | grep -m 1 -o -E "orientation=[0-9]" | head -n 1 | grep -m 1 -o -E "[0-9]"'
+        result = subprocess.run(shell_cmd, shell=True, capture_output=True, text=True, timeout=10)
+    
+    try:
+        orientation = int(result.stdout.strip())
+        print(f"[Screen] 屏幕方向: {orientation} ({'竖屏' if orientation in [0, 2] else '横屏'})")
+        return orientation
+    except (ValueError, AttributeError):
+        print(f"[Screen] 无法检测屏幕方向, 默认竖屏")
+        return 0
+
+
+def get_orientation_adjusted_size(
+    width: int, height: int, 
+    device_id: Optional[str] = None
+) -> Tuple[int, int]:
+    """
+    根据屏幕方向调整分辨率
+    
+    横屏时交换宽高，确保坐标转换正确
+    
+    Args:
+        width: 原始宽度
+        height: 原始高度
+        device_id: 可选，指定设备 ID
+    
+    Returns:
+        调整后的 (width, height)
+    """
+    orientation = detect_screen_orientation(device_id)
+    if orientation in [1, 3]:  # 横屏
+        return height, width
+    return width, height
+
+
 # 系统按键映射
 SYSTEM_BUTTONS = {
     'home': 'KEYCODE_HOME',

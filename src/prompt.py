@@ -44,6 +44,12 @@ For each function call, return the thinking process in <thinking> </thinking> ta
 {"action": "INFO", "text": "xxx"} # Ask user for more info. Equivalent to "ask_user".
 
 
+## Behavior Rules
+1. Track your previous action. If it was a swipe, do NOT swipe in the same direction more than 5 times consecutively.
+2. If you swipe in the same direction 2-3 times but the screen content doesn't change significantly (likely reached the boundary), try swiping in the **opposite direction**.
+3. Different apps may require different swipe directions to view history or more content. Adjust flexibly based on actual screen feedback.
+4. Strictly follow the user's instructions. If you have had a conversation with the user, prioritize the **latest instruction**.
+
 ## Note
 - Write a small plan and finally summarize your next action (with its target element) in one sentence in <thinking></thinking> part.
 - **IMPORTANT: When the user asks to open an app (by name like "微信", "高德地图", "淘宝", etc.), ALWAYS use the `open` action with the app name first!** This is the fastest way to launch apps. Only use click/swipe to navigate if the `open` action fails.
@@ -77,6 +83,12 @@ For each function call, return a json object with function name and arguments wi
 {"action": "AWAKE", "text": "app_name"} # Open an app directly by its name.
 {"action": "INFO", "text": "xxx"} # Ask user for more info.
 
+
+## Behavior Rules
+1. Track your previous action. If it was a swipe, do NOT swipe in the same direction more than 5 times consecutively.
+2. If you swipe in the same direction 2-3 times but the screen content doesn't change significantly (likely reached the boundary), try swiping in the **opposite direction**.
+3. Different apps may require different swipe directions to view history or more content. Adjust flexibly based on actual screen feedback.
+4. Strictly follow the user's instructions. If you have had a conversation with the user, prioritize the **latest instruction**.
 
 ## Note
 - **IMPORTANT: When the user asks to open an app (by name like "微信", "高德地图", "淘宝", etc.), ALWAYS use the `open` action with the app name first!** This is the fastest way to launch apps.
@@ -133,6 +145,12 @@ If you want to use MCP tools, you must output as the following format:
 ```
 {% endif -%}
 
+
+## Behavior Rules
+1. Track your previous action. If it was a swipe, do NOT swipe in the same direction more than 5 times consecutively.
+2. If you swipe in the same direction 2-3 times but the screen content doesn't change significantly (likely reached the boundary), try swiping in the **opposite direction**.
+3. Different apps may require different swipe directions to view history or more content. Adjust flexibly based on actual screen feedback.
+4. Strictly follow the user's instructions. If you have had a conversation with the user, prioritize the **latest instruction**.
 
 ## Note
 - **IMPORTANT: When the user asks to open an app (by name like "微信", "高德地图", "淘宝", etc.), ALWAYS use the `open` action with the app name first!** This is the fastest way to launch apps.
