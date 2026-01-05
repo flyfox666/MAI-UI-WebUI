@@ -588,3 +588,7 @@ MAI-UI Mobile is a foundation GUI agent developed by Alibaba Cloud and licensed 
 This product contains various third-party components under other open source licenses. 
 See the NOTICE file for more information.
 
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=flyfox666/MAI-UI-WebUI&type=date&legend=top-left)](https://www.star-history.com/#flyfox666/MAI-UI-WebUI&type=date&legend=top-left)
+
